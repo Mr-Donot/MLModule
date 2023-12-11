@@ -1,6 +1,6 @@
 import csv
 import numpy as np
-
+from MLModule.model import NeuralNetwork
 
 def compare_predict_and_expected(predicts: list[list[float]], expected: list[list[float]])-> list[bool]:
 
@@ -10,8 +10,18 @@ def compare_predict_and_expected(predicts: list[list[float]], expected: list[lis
         expected_res = exp.index(max(exp))
         results.append(res==expected_res)
     
-    print(f"{sum(results)} / {len(results)} corrects")
     return results
+
+def print_result(model: NeuralNetwork, Xs: list[list[float]], ys: list[list[float]])-> None:
+    results = []
+    for x,y in zip(Xs, ys):
+        pred = model.predict(x)
+        res = pred.index(max(pred))
+        expected_res = y.index(max(y))
+        results.append(res==expected_res)
+
+    print(f"{sum(results)} / {len(results)} corrects")
+    return None
 
 #work only for iris.csv for now
 def get_data_from_csv(csvpath: str = "data/iris.csv")-> (list[list[float]], list[list[float]]):

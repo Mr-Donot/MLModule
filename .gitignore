@@ -164,3 +164,4 @@ cython_debug/
 iris.csv
 
 # Models
+*.pkl

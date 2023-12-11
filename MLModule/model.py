@@ -13,8 +13,6 @@ class NeuralNetwork():
         self.nb_layers = 2 + len(hidden_layers)
         self.init_network()
 
-
-
     def init_network(self):
         network = []
         layers_values = []
@@ -187,7 +185,7 @@ class NeuralNetwork():
         for x, y in zip(Xs, ys):
             self.update_all_gradients(x, y)
 
-        self.apply_gradient_descent(learning_rate / len(Xs))
+        self.apply_gradient_descent(learning_rate)  # divide lr by len(Xs ???)
 
         self.clean_all_gradients()
 

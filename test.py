@@ -1,6 +1,7 @@
 from MLModule.utils import get_data_from_csv
 from MLModule.model import NeuralNetwork
 from MLModule.display import plot_model_prediction
+from MLModule.utils import print_result
 
 
 nb_input = 4
@@ -19,19 +20,22 @@ Xs, ys = get_data_from_csv("data/iris.csv")
 
 cost = model.cost(Xs, ys)
 print(f"Initial Cost : {cost}")
-nb_training = 10000
+nb_training = 500
+nb_to_print = 100
 #plot_model_prediction(model, Xs, ys)
 
 for i in range(nb_training):
-    if (i+1)%(nb_training//10) == 0 : 
+    if (i+1)%(nb_to_print) == 0 : 
         print(f"training {i+1} / {nb_training}")
         cost = model.cost(Xs, ys)
         print(f"Cost : {cost}")
         model.save_weights(path=PATH)
-    model.learn2(Xs, ys)
+    model.learn2(Xs, ys, learning_rate=0.01)
 
 cost = model.cost(Xs, ys)
 print(f"Final Cost : {cost}")
+
+print_result(model, Xs, ys)
 
 plot_model_prediction(model, Xs, ys)
 
