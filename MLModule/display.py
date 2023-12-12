@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from MLModule.model import NeuralNetwork
 from MLModule.utils import compare_predict_and_expected
+from MLModule.costHistory import get_costs
 
 def plot_datapoints(data_points, colors):
     # Extraire les coordonnées x et y des datapoints
@@ -51,3 +52,13 @@ def plot_model_prediction(model : NeuralNetwork, Xs :list[list[float]], ys: list
 
     # Afficher le plot
     plt.show()
+
+
+def plot_cost_history(model_name=""):
+    
+    cost_values = list(map(float,get_costs(model_name)))
+
+    plt.plot([i for i in range(len(cost_values))], cost_values)
+    plt.show()
+    
+

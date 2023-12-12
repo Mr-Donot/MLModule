@@ -1,17 +1,20 @@
 from random import random
-import math
+import numpy as np
 from typing import Union
 import pickle, os
+
+from MLModule.costHistory import write_new_cost
 
 
 class NeuralNetwork():
 
-    def __init__(self, nb_input: int, nb_output: int, hidden_layers: list[int]=[]):
+    def __init__(self, nb_input: int, nb_output: int, hidden_layers: list[int]=[], name="no_name"):
         self.nb_input = nb_input
         self.nb_output = nb_output
         self.hidden_layers = hidden_layers
         self.nb_layers = 2 + len(hidden_layers)
-        self.init_network()
+        self.name = name
+        self.load_weights("model/"+self.name+".pkl")
 
     def init_network(self):
         network = []
@@ -68,8 +71,6 @@ class NeuralNetwork():
             self.layers_values[idx_layer] = next_layer
             idx_layer += 1
 
-
-
         return next_layer
 
 
@@ -88,7 +89,12 @@ class NeuralNetwork():
         return new_layer
     
     def activation_function(self, value: float) -> float:
-        return 1 / (1 + math.exp(- value))
+        if value > 0:   
+            z = np.exp(-value)
+            return 1/(1+z)
+        else:
+            z = np.exp(value)
+            return z/(1+z)
     
     def activation_function_deriv(self, value: float) -> float:
         activated_value = self.activation_function(value)
@@ -123,13 +129,14 @@ class NeuralNetwork():
                 for input in range(len(layer[output]["weights"])):
                     layer[output]["weights"][input] -= layer[output]["cost_grad_w"][input] * learning_rate
 
-    def update_gradients(self, idx_layer_out: int, node_values : list[float]):
+    def update_gradients(self, idx_layer_out: int, node_values : list[float], random_node_pass_rate: float):
 
         for n_out in range(len(self.network[idx_layer_out])):
 
             for n_in in range(len(self.network[idx_layer_out-1])):
-                derivative_cost_weight = self.layers_values[idx_layer_out-1][n_in] * node_values[n_out]
-                self.network[idx_layer_out][n_out]["cost_grad_w"][n_in] += derivative_cost_weight
+                if random_node_pass_rate < random():
+                    derivative_cost_weight = self.layers_values[idx_layer_out-1][n_in] * node_values[n_out]
+                    self.network[idx_layer_out][n_out]["cost_grad_w"][n_in] += derivative_cost_weight
 
             derivative_cost_bias = 1 * node_values[n_out]
             self.network[idx_layer_out][n_out]["cost_grad_b"] += derivative_cost_bias
@@ -162,13 +169,13 @@ class NeuralNetwork():
         return new_node_values
 
 
-    def update_all_gradients(self, datapoint: list[float], expected_output: list[float]):
+    def update_all_gradients(self, datapoint: list[float], expected_output: list[float], random_node_pass_rate: float):
 
         output = self.predict(datapoint)
 
         node_values = self.calculate_output_node_values(output, expected_output)
 
-        self.update_gradients(-1, node_values)
+        self.update_gradients(-1, node_values, random_node_pass_rate)
 
         for hidden_idx in range(len(self.network)-1, -1):
             node_values = self.calculate_hidden_node_values(hidden_idx, node_values)
@@ -180,15 +187,26 @@ class NeuralNetwork():
                 self.network[layer][output]["cost_grad_b"] = 0
                 self.network[layer][output]["cost_grad_w"] = [0]*len(self.network[layer][output]["cost_grad_w"])
 
-    def learn2(self, Xs: list[list[float]], ys : list[list[float]], learning_rate: float = 0.001):
+
+    #using back-propagation to make the model a lot faster
+    def learn2(self, Xs: list[list[float]], ys : list[list[float]], learning_rate: float = 0.001, keep_track_cost=False, random_node_pass_rate: float=0.0):
 
         for x, y in zip(Xs, ys):
-            self.update_all_gradients(x, y)
+            self.update_all_gradients(x, y, random_node_pass_rate)
 
-        self.apply_gradient_descent(learning_rate)  # divide lr by len(Xs ???)
+        self.apply_gradient_descent(learning_rate)  # divide learning_rate by len(Xs ???)
 
         self.clean_all_gradients()
 
+
+        if keep_track_cost : 
+            cost_value = self.cost(Xs, ys)
+            write_new_cost(cost_value, self.name)
+            return cost_value
+        return None
+
+
+    #Obsolete
     def learn(self, Xs: list[list[float]], ys : list[list[float]], learning_rate: float = 0.001):
         h = 0.00001
         original_cost = self.cost(Xs, ys)
@@ -215,13 +233,27 @@ class NeuralNetwork():
         # Create the directory if it doesn't exist
         if not os.path.exists(directory):
             os.makedirs(directory)
+
+        # Create a dictionary to store all the variables you want to save
+        data_to_save = {
+            'network' : self.network, 
+            'layers_length' : self.layers_length,
+            'layers_values' : self.layers_values}
+
         with open(path, 'wb') as file:
-            pickle.dump(self.network, file)
+            pickle.dump(data_to_save, file)
 
     def load_weights(self, path="model/points_2_dim.pkl"):
         try:
             with open(path, 'rb') as file:
-                self.network = pickle.load(file)
+                # Load the dictionary containing all the variables
+                data = pickle.load(file)
+
+                # Assign the values to the corresponding attributes
+                self.network = data['network']
+                self.layers_length = data['layers_length']
+                self.layers_values = data['layers_values']
+
                 print("Weights loaded successfully.")
         except FileNotFoundError:
             print(f"File {path} not found. Initializing a new network.")

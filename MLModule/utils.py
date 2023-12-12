@@ -20,28 +20,49 @@ def print_result(model: NeuralNetwork, Xs: list[list[float]], ys: list[list[floa
         expected_res = y.index(max(y))
         results.append(res==expected_res)
 
-    print(f"{sum(results)} / {len(results)} corrects")
+    print(f"{sum(results)} / {len(results)} corrects, so {round(sum(results) * 100 / len(results),2)} % accuracy")
     return None
 
 #work only for iris.csv for now
-def get_data_from_csv(csvpath: str = "data/iris.csv")-> (list[list[float]], list[list[float]]):
+def get_data_from_csv(csvpath: str = "data/iris.csv", header=False)-> (list[list[float]], list[list[float]]):
 
     Xs, ys = [], []
 
-    class_mapping = {
-        'Iris-setosa': [1,0,0], 
-        'Iris-versicolor': [0,1,0], 
-        'Iris-virginica': [0,0,1]
-        }
-
+    class_set = set()
     with open(csvpath, 'r') as csvfile:
         reader = csv.reader(csvfile)
         
         for row in reader:
-            features = list(map(float, row[:-1]))
-            Xs.append(features)
-            class_label = row[-1]
-            numeric_label = class_mapping[class_label]
-            ys.append(numeric_label)
+            if header:
+                header = False
+            else:
+                features = list(map(float, row[:-1]))
+                Xs.append(features)
+                class_label = int(row[0])
 
+                class_set.add(class_label)
+                ys.append(class_label)
+
+    class_mapping = {}
+    idx =0
+    for label in class_set:
+        res = []
+        for i in range(len(class_set)):
+            res.append(0 if i!=idx else 1)
+        class_mapping[label] = res
+        idx += 1
+    ys = list(map(lambda x : class_mapping[x], ys))
     return Xs, ys
+
+
+def reduce_dataset(Xs:list[list[float]], ys:list[list[float]], reduce_rate=0.75) -> [list[list[float]], list[list[float]]]:
+    if reduce_rate<=0 or reduce_rate>1:
+        reduce_rate = 0.75
+    nb_datapoint_wanted = int(len(Xs) * reduce_rate)
+    
+    
+    indices = np.random.choice(len(Xs), size=nb_datapoint_wanted, replace=False)
+    Xs_train_small = [Xs[i] for i in indices]
+    ys_train_small = [ys[i] for i in indices]
+
+    return Xs_train_small, ys_train_small

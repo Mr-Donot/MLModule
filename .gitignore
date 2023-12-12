@@ -161,7 +161,8 @@ cython_debug/
 
 
 # Data
-iris.csv
+*.csv
 
 # Models
 *.pkl
+*_costs.txt
