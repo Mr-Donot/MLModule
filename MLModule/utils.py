@@ -66,3 +66,26 @@ def reduce_dataset(Xs:list[list[float]], ys:list[list[float]], reduce_rate=0.75)
     ys_train_small = [ys[i] for i in indices]
 
     return Xs_train_small, ys_train_small
+
+
+def print_confusion_matrix(model: NeuralNetwork, full_Xs: list[list[float]], full_ys: list[list[float]]):
+
+    nb_possible_output = len(full_ys[0])
+    matrix = []
+    for i in range(nb_possible_output):
+        matrix.append([0]*nb_possible_output)
+
+    for x, y in zip(full_Xs, full_ys):
+        pred_array = model.predict(x)
+        predicted_output = pred_array.index(max(pred_array))
+        expected_output = y.index(max(y))
+        matrix[expected_output][predicted_output] += 1
+
+    print("Expected (---) / Predicted (|||)")
+    for line in matrix:
+        print(line)
+    
+    for line in matrix:
+        print(f"{matrix.index(line)} : {round(line[matrix.index(line)] * 100 / sum(line), 2)} %")
+
+

@@ -166,3 +166,6 @@ cython_debug/
 # Models
 *.pkl
 *_costs.txt
+
+#tests
+test.py
