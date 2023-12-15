@@ -119,7 +119,7 @@ class NeuralNetwork():
         for x, y in zip(Xs, ys):
             total_cost += self.datapoint_cost(x, y)
 
-        return total_cost
+        return total_cost / len(Xs)
 
     def apply_gradient_descent(self, learning_rate: float):
         for layer in self.network:
@@ -189,7 +189,7 @@ class NeuralNetwork():
 
 
     #using back-propagation to make the model a lot faster
-    def learn2(self, Xs: list[list[float]], ys : list[list[float]], learning_rate: float = 0.001, keep_track_cost=False, random_node_pass_rate: float=0.0):
+    def learn(self, Xs: list[list[float]], ys : list[list[float]], learning_rate: float = 0.001, keep_track_cost=False, random_node_pass_rate: float=0.0):
 
         for x, y in zip(Xs, ys):
             self.update_all_gradients(x, y, random_node_pass_rate)
@@ -207,7 +207,7 @@ class NeuralNetwork():
 
 
     #Obsolete
-    def learn(self, Xs: list[list[float]], ys : list[list[float]], learning_rate: float = 0.001):
+    def learn_obsolete(self, Xs: list[list[float]], ys : list[list[float]], learning_rate: float = 0.001):
         h = 0.00001
         original_cost = self.cost(Xs, ys)
 

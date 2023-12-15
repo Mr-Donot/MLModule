@@ -24,7 +24,7 @@ def print_result(model: NeuralNetwork, Xs: list[list[float]], ys: list[list[floa
     return None
 
 #work only for iris.csv for now
-def get_data_from_csv(csvpath: str = "data/iris.csv", header=False)-> (list[list[float]], list[list[float]]):
+def get_data_from_csv(csvpath: str = "data/iris.csv", header=False, label_idx:int=-1)-> (list[list[float]], list[list[float]]):
 
     Xs, ys = [], []
 
@@ -38,7 +38,7 @@ def get_data_from_csv(csvpath: str = "data/iris.csv", header=False)-> (list[list
             else:
                 features = list(map(float, row[:-1]))
                 Xs.append(features)
-                class_label = int(row[0])
+                class_label = row[label_idx]
 
                 class_set.add(class_label)
                 ys.append(class_label)
@@ -52,6 +52,7 @@ def get_data_from_csv(csvpath: str = "data/iris.csv", header=False)-> (list[list
         class_mapping[label] = res
         idx += 1
     ys = list(map(lambda x : class_mapping[x], ys))
+
     return Xs, ys
 
 
@@ -70,6 +71,7 @@ def reduce_dataset(Xs:list[list[float]], ys:list[list[float]], reduce_rate=0.75)
 
 def print_confusion_matrix(model: NeuralNetwork, full_Xs: list[list[float]], full_ys: list[list[float]]):
 
+    corrects = 0
     nb_possible_output = len(full_ys[0])
     matrix = []
     for i in range(nb_possible_output):
@@ -80,12 +82,15 @@ def print_confusion_matrix(model: NeuralNetwork, full_Xs: list[list[float]], ful
         predicted_output = pred_array.index(max(pred_array))
         expected_output = y.index(max(y))
         matrix[expected_output][predicted_output] += 1
+        corrects += expected_output == predicted_output
 
     print("Expected (---) / Predicted (|||)")
     for line in matrix:
         print(line)
     
+    idx = 0
     for line in matrix:
-        print(f"{matrix.index(line)} : {round(line[matrix.index(line)] * 100 / sum(line), 2)} %")
+        print(f"{idx} : {round(line[idx] * 100 / sum(line), 2)} %")
+        idx += 1
 
-
+    print(f"Overall accuracy : {round(corrects * 100 / len(full_ys),2)} %")
